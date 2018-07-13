@@ -8,7 +8,7 @@ var allowCrossDomain = function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   if (req.method == 'OPTIONS') {
-    res.send(200) // 快速响应OPIONTS
+    res.send(200)
   }
   next();
 };
@@ -28,13 +28,12 @@ app.route('/user/:username').get((req, res) => {
         success: false,
         message: '用户名已被注册'
       })
-      return
+      // res.end();
     } else {
       res.json({
         success: true,
         message: "用户名可用"
       })
-      return
     }
   })
 })
@@ -48,13 +47,11 @@ app.route('/user/:username/:password').get((req, res) => {
         success: true,
         message: '登录成功，欢迎您：' + req.params.username
       })
-      return
     } else {
       res.json({
         success: false,
         message: '登录失败，用户名或密码错误'
       })
-      return
     }
   })
 })
@@ -64,7 +61,7 @@ app.route('/user').post((req, res) => {
       success: false,
       message: '传递参数有误'
     })
-    return
+    res.end();
   }
   Users.find({
     username: req.body.username
@@ -82,14 +79,14 @@ app.route('/user').post((req, res) => {
             success: true,
             message: '注册成功'
           })
-          return
+          res.end()
         })
       } else {
         res.json({
           success: false,
           message: '用户名已被注册'
         })
-        return
+        res.end()
       }
     } else {
       console.log(err)
