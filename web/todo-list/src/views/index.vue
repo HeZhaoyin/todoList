@@ -3,37 +3,46 @@
     <transition name="slide-fade">
     <div class="login-box" v-if="type == 'login'" key="login">
       <h1>todoList登录</h1>
-      <div class="login-box-item">
-        <label for="username">用户名：</label>
-        <input type="text" id="username" v-model="loginData.username">
-      </div>
-      <div class="login-box-item">
-        <label for="password">密码：</label>
-        <input type="password" id="password" v-model="loginData.password">
-      </div>
-      <div class="login-box-item">
-        <button @click="login">登录</button>
-        <button @click="changeType('register')">注册</button>
-      </div>
+      <Form ref="loginForm" :rules="loginValidate" :model="loginData">
+        <FormItem prop="username" required>
+          <i-input type="text" v-model="loginData.username" placeholder="用户名">
+                <Icon type="ios-person-outline" slot="prepend"></Icon>
+            </i-input>
+        </FormItem>
+        <FormItem prop="password">
+            <i-input type="password" v-model="loginData.password" placeholder="密码">
+                <Icon type="ios-locked-outline" slot="prepend"></Icon>
+            </i-input>
+        </FormItem>
+        <div class="login-btn-box">
+            <Button type="primary" @click="login">登录</Button>
+            <Button @click="changeType('register')">注册</Button>
+        </div>
+      </Form>
     </div>
     <div class="register-box" v-if="type == 'register'" key="register">
       <h1>todoList注册</h1>
-      <div class="login-box-item">
-        <label for="username">用户名：</label>
-      <input type="text" id="username" v-model="registerData.username" @blur="checkUser">
-      </div>
-      <div class="login-box-item">
-        <label for="password">密码：</label>
-        <input type="password" id="password" v-model="registerData.password">
-      </div>
-      <div class="login-box-item">
-        <label for="confirmPassword">确认密码：</label>
-        <input type="password" id="confirmPassword" v-model="registerData.confirmPassword">
-      </div>
-      <div class="login-box-item">
-        <button @click="register">确认注册</button>
-        <button @click="changeType('login')">返回</button>
-      </div>
+      <Form ref="registerForm" :rules="registerValidate" :model="registerData">
+        <FormItem prop="username">
+          <i-input type="text" v-model="registerData.username" placeholder="用户名">
+                <Icon type="ios-person-outline" slot="prepend"></Icon>
+            </i-input>
+        </FormItem>
+        <FormItem prop="password">
+            <i-input type="password" v-model="registerData.password" placeholder="密码">
+                <Icon type="ios-locked-outline" slot="prepend"></Icon>
+            </i-input>
+        </FormItem>
+        <FormItem prop="confirmPassword">
+            <i-input type="password" v-model="registerData.confirmPassword" placeholder="确认密码">
+                <Icon type="ios-locked-outline" slot="prepend"></Icon>
+            </i-input>
+        </FormItem>
+        <div class="login-btn-box">
+            <Button type="primary" @click="register">注册</Button>
+            <Button @click="changeType('login')">返回</Button>
+        </div>
+      </Form>
     </div>
     </transition>
   </div>
@@ -45,6 +54,30 @@ import * as service from "../service/index.js";
 export default {
   name: "index",
   data() {
+    const validateRegisterUsername = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入用户名"));
+      } else {
+        service
+          .checkUser({
+            username: this.registerData.username
+          })
+          .then(res => {
+            if (!res.data.success) {
+              callback(new Error("用户名已被注册"));
+            } else {
+              callback();
+            }
+          });
+      }
+    };
+    const validateRegRePwd = (rule, value, callback) => {
+      if (this.registerData.password !== this.registerData.confirmPassword) {
+        callback(new Error("两处密码不一致"));
+      } else {
+        callback();
+      }
+    };
     return {
       type: "login",
       loginData: {
@@ -55,36 +88,79 @@ export default {
         username: "",
         password: "",
         confirmPassword: ""
+      },
+      loginValidate: {
+        username: [
+          { required: true, message: "请输入用户名", trigger: "blur" }
+        ],
+        password: [{ required: true, message: "请输入密码", trigger: "blur" }]
+      },
+      registerValidate: {
+        username: [{ validator: validateRegisterUsername, trigger: "blur" }],
+        password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+        confirmPassword: [
+          { required: true, message: "请重复输入密码", trigger: "blur" },
+          { validator: validateRegRePwd, trigger: "change" }
+        ]
       }
     };
   },
   methods: {
     changeType: function(type) {
       this.type = type;
+      this.loginData = {
+        username: "",
+        password: ""
+      };
+      this.registerData = {
+        username: "",
+        password: "",
+        confirmPassword: ""
+      };
     },
     register: function() {
-      service
-        .register({
-          username: this.registerData.username,
-          password: this.registerData.password
-        })
-        .then(res => {
-          console.log(res);
-        });
-    },
-    checkUser: function() {
-      service
-        .checkUser({
-          username: this.registerData.username
-        })
-        .then(res => {
-          console.log(res);
-        });
+      this.$refs.registerForm.validate(valid => {
+        if (!valid) {
+          this.$Message.error("请输入所有信息");
+          return;
+        } else {
+          service
+            .register({
+              username: this.registerData.username,
+              password: this.registerData.password
+            })
+            .then(res => {
+              console.log(res);
+              if (res.data.success) {
+                this.$Message.success(res.data.message);
+                this.changeType("login");
+              } else {
+                this.$Message.error(res.data.message);
+              }
+            });
+        }
+      });
     },
     login: function() {
-      service.login({
-        username: this.loginData.username,
-        password: this.loginData.password
+      this.$refs.loginForm.validate(valid => {
+        console.log(valid);
+        if (!valid) {
+          this.$Message.error("请输入所有信息");
+          return;
+        } else {
+          service
+            .login({
+              username: this.loginData.username,
+              password: this.loginData.password
+            })
+            .then(res => {
+              if (res.data.success) {
+                this.$Message.success(res.data.message);
+              } else {
+                this.$Message.error(res.data.message);
+              }
+            });
+        }
       });
     }
   }
@@ -102,14 +178,18 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-.login-box-item {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
+  padding: 50px 120px;
+  box-shadow: 1px 4px 20px rgba(0, 0, 0, 0.6);
+  border: 1px solid #ccc;
 }
 h1 {
   text-align: center;
+}
+
+.login-btn-box {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 }
 .login-box-item label {
   width: 90px;
