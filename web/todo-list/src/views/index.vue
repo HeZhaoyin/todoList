@@ -104,7 +104,7 @@ export default {
         ]
       }
     };
-  },
+  }, 
   methods: {
     changeType: function(type) {
       this.type = type;
