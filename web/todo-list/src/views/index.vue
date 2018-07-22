@@ -156,6 +156,7 @@ export default {
             .then(res => {
               if (res.data.success) {
                 this.$Message.success(res.data.message);
+                this.$router.push('')
               } else {
                 this.$Message.error(res.data.message);
               }

@@ -10,5 +10,11 @@ export default new Router({
     component: resolve => {
       require(['@/views/index'], resolve)
     }
-  }, ]
+  }, {
+    path: '/home',
+    name: 'todoList',
+    component: resolve => {
+      require(['@/views/main/TodoList'], resolve)
+    }
+  }]
 })
