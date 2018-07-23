@@ -104,7 +104,7 @@ export default {
         ]
       }
     };
-  }, 
+  },
   methods: {
     changeType: function(type) {
       this.type = type;
@@ -156,7 +156,11 @@ export default {
             .then(res => {
               if (res.data.success) {
                 this.$Message.success(res.data.message);
-                this.$router.push('')
+                localStorage.setItem("userInfo", JSON.stringify({
+                  token: res.data.token,
+                  user: res.data.user
+                }));
+                this.$router.push("home");
               } else {
                 this.$Message.error(res.data.message);
               }

@@ -1,11 +1,14 @@
-const mongoose = require('mongoose')
 const express = require('express')
 const bodyParser = require('body-parser')
+const jwt = require('jwt-simple')
 const app = express()
+const Users = require('./db/model/user')
+const jwtauth = require('./user/auth')
+app.set('jwtTokenSecret', 'HEZHAOYINTODOLIST');
 app.use(bodyParser.json())
 var allowCrossDomain = function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*'); //自定义中间件，设置跨域需要的响应头。
-  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With,X-Access-Token");
   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   if (req.method == 'OPTIONS') {
     res.send(200) // 快速响应OPIONTS
@@ -14,11 +17,7 @@ var allowCrossDomain = function (req, res, next) {
 };
 
 app.use(allowCrossDomain); //运用跨域的中间件
-let db = mongoose.connect('mongodb://todoList:todoList@47.52.192.88:27017/todoList')
-const Users = mongoose.model('users', {
-  username: String,
-  password: String
-})
+
 app.route('/user/:username').get((req, res) => {
   Users.find({
     username: req.params.username
@@ -44,10 +43,18 @@ app.route('/user/:username/:password').get((req, res) => {
     password: req.params.password
   }, (err, user) => {
     if (user.length !== 0) {
+      var expires = Date.now() + 7 * 24 * 3600 * 1000;
+      var token = jwt.encode({
+        iss: user.id,
+        exp: expires
+      }, app.get('jwtTokenSecret'));
       res.json({
         success: true,
-        message: '登录成功，欢迎您：' + req.params.username
-      })
+        message: '登录成功，欢迎您：' + req.params.username,
+        token: token,
+        expires: expires,
+        user: user
+      });
       return
     } else {
       res.json({
@@ -95,6 +102,17 @@ app.route('/user').post((req, res) => {
       console.log(err)
     }
   })
+})
+app.get('/todoList', function (req, res) {
+  // if (req.user) {
+    res.json({
+      success: true,
+    })
+  // } else {
+  //   res.json({
+  //     success: false,
+  //   })
+  // }
 })
 
 app.listen(4000)
