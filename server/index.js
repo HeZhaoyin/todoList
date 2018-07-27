@@ -1,9 +1,11 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const jwt = require('jwt-simple')
-const app = global.app =  express()
+const app = global.app = express()
 const Users = require('./db/model/user')
+const todoList = require('./db/model/todoList')
 const jwtauth = require('./user/auth')
+const router = express.Router()
 app.set('jwtTokenSecret', 'HEZHAOYINTODOLIST');
 
 var allowCrossDomain = function (req, res, next) {
@@ -19,7 +21,7 @@ var allowCrossDomain = function (req, res, next) {
 app.use(allowCrossDomain); //运用跨域的中间件
 app.use(bodyParser.json())
 
-app.route('/user/:username').get((req, res) => {
+router.route('/user/:username').get((req, res) => {
   Users.find({
     username: req.params.username
   }, (err, user) => {
@@ -38,7 +40,7 @@ app.route('/user/:username').get((req, res) => {
     }
   })
 })
-app.route('/user/:username/:password').get((req, res) => {
+router.route('/user/:username/:password').get((req, res) => {
   console.log('123');
   Users.find({
     username: req.params.username,
@@ -68,7 +70,7 @@ app.route('/user/:username/:password').get((req, res) => {
     }
   })
 })
-app.route('/user').post((req, res) => {
+router.route('/user').post((req, res) => {
   if (!req.body.username || !req.body.password) {
     res.json({
       success: false,
@@ -106,7 +108,9 @@ app.route('/user').post((req, res) => {
     }
   })
 })
-app.get('/todoList', jwtauth, function (req, res) {
+router.route('/todoList').post(jwtauth, function (req, res) {
+
+}).get(jwtauth, function (req, res) {
   console.log(req.user)
   if (req.user) {
     res.json({
@@ -118,5 +122,5 @@ app.get('/todoList', jwtauth, function (req, res) {
     })
   }
 })
-
+app.use(router)
 app.listen(4000)
