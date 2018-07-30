@@ -109,12 +109,66 @@ router.route('/user').post((req, res) => {
   })
 })
 router.route('/todoList').post(jwtauth, function (req, res) {
+  console.log('修改的用户ID为:' + req.user._id)
+  console.log(req.body)
 
+  todoList.findOne({
+    userID: req.user._id
+  }, function (error, doc) {
+    if (error) {
+      console.error(error)
+    } else {
+      if (doc) {
+        todoList.update({
+          userID: req.user._id
+        }, {
+          "$push": {
+            list: {
+              title: req.body.title,
+              content: req.body.content,
+              type: req.body.type,
+              status: 0,
+            }
+          }
+        }, (err, result) => {
+          if(!err){
+            res.json({
+              success: true,
+              message: '保存成功'
+            })
+            return
+          }
+        })
+      } else {
+        let myTodoListData = new todoList({
+          userID: req.user._id,
+          list: [{
+            title: req.body.title,
+            content: req.body.content,
+            type: req.body.type,
+            status: 0,
+          }]
+        });
+        myTodoListData.save().then(() => {
+           res.json({
+             success: true,
+             message: '保存成功'
+           })
+           return
+        })
+      }
+    }
+  });
 }).get(jwtauth, function (req, res) {
   console.log(req.user)
   if (req.user) {
-    res.json({
-      success: true,
+    todoList.findOne({
+      userID:req.user._id
+    },(error,result)=>{
+      res.json({
+        success:true,
+        userTodoList:result
+      })
     })
   } else {
     res.json({

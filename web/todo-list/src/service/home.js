@@ -9,3 +9,11 @@ export const getTodoList = (data) => {
     params: data
   })
 }
+
+export const addTodoList = (data) => {
+  return fetch({
+    url: '/todoList',
+    method: 'POST',
+    data: data
+  })
+}

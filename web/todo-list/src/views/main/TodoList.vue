@@ -14,15 +14,15 @@
               <span class="todo-input-title" :style="{color:todoInputTitleColor}">{{todoInputTitle}}</span>
             </FormItem>
             <FormItem label="标题：">
-              <i-input placeholder="请输入Todo标题"></i-input>
+              <i-input placeholder="请输入Todo标题" v-model="todoListData.title"></i-input>
             </FormItem>
             <FormItem label="详细内容：">
-              <i-input type="textarea" :autosize="{minRows: 3,maxRows: 8}" placeholder="请输入Todo详细内容"></i-input>
+              <i-input type="textarea" :autosize="{minRows: 3,maxRows: 8}" placeholder="请输入Todo详细内容" v-model="todoListData.content"></i-input>
             </FormItem>
           </Form>
           <div slot="footer">
               <Button @click="hideAdd">取消</Button>
-              <Button type="primary">确认</Button>
+              <Button type="primary" @click="addTodoList">确认</Button>
           </div>
         </Modal>
         <div class="todo-list-type" :class="type.cssClass" v-for="type in typeList" :key="type.value">
@@ -35,9 +35,9 @@
           </div>
           <div class="todo-content" :style="{height:contentHeight + 'px'}">
             <ul>
-              <li class="todo-list-item">
+              <li class="todo-list-item" v-for="list in computedList(type.value)" :key="list.title">
                 <Checkbox></Checkbox>
-                <span>这里是标题</span>
+                <span>{{list.title}}</span>
                 <Button class="todo-del-btn" type="error" size="small">删除</Button>
               </li>
             </ul>
@@ -62,7 +62,15 @@ export default {
         { value: 4, cssClass: "type-four", typeName: "不紧急 & 不重要" }
       ],
       isShowAdd: false,
-      addType: 0
+      addType: 0,
+      todoListData: {
+        title: "",
+        content: ""
+      },
+      typeOneList: [],
+      typeTwoList: [],
+      typeThreeList: [],
+      typeFourList: []
     };
   },
   computed: {
@@ -100,7 +108,7 @@ export default {
           return "不紧急 & 不重要";
           break;
       }
-    }
+    },
   },
   mounted: function() {
     window.addEventListener("resize", () => {
@@ -110,15 +118,66 @@ export default {
     });
     service.getTodoList({}).then(res => {
       console.log(res);
+      let listArr = res.data.userTodoList.list;
+      this.initList(listArr);
     });
   },
   methods: {
+    initList: function(listArr) {
+      for (let i = 0; i < listArr.length; i++) {
+        switch (listArr[i].type) {
+          case 1:
+            this.typeOneList.push(listArr[i]);
+            break;
+          case 2:
+            this.typeTwoList.push(listArr[i]);
+            break;
+          case 3:
+            this.typeThreeList.push(listArr[i]);
+            break;
+          case 4:
+            this.typeFourList.push(listArr[i]);
+            break;
+        }
+      }
+    },
     showAdd: function(value) {
       this.addType = value;
       this.isShowAdd = true;
     },
     hideAdd: function() {
       this.isShowAdd = false;
+    },
+    addTodoList: function() {
+      service
+        .addTodoList({
+          title: this.todoListData.title,
+          content: this.todoListData.content,
+          type: this.addType
+        })
+        .then(res => {
+          console.log(res);
+          if (res.data.success) {
+            this.$Message.success(res.data.message);
+            this.hideAdd();
+          }
+        });
+    },
+    computedList: function(type) {
+      switch (type) {
+        case 1:
+          return this.typeOneList;
+          break;
+        case 2:
+          return this.typeTwoList;
+          break;
+        case 3:
+          return this.typeThreeList;
+          break;
+        case 4:
+          return this.typeFourList;
+          break;
+      }
     }
   }
 };
