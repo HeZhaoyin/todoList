@@ -2,6 +2,7 @@
     <div>
       <div class="main-header">
         <h1>HeZhaoyin's ToDoList</h1>
+        <Button class="quit-btn" @click="quitSystem">退出</Button>
       </div>
       <div class="todo-list-box" :style="{height:boxHeight + 'px'}">
         <Modal v-model="isShowAdd" width="450">
@@ -35,9 +36,13 @@
           </div>
           <div class="todo-content" :style="{height:contentHeight + 'px'}">
             <ul>
-              <li class="todo-list-item" v-for="list in computedList(type.value)" :key="list.title">
+              <li class="todo-list-item" v-for="(list,index) in computedList(type.value)" :key="index">
                 <Checkbox></Checkbox>
-                <span>{{list.title}}</span>
+                <div>
+                  <p>{{list.title}}</p>
+                  <p class="todo-content">{{list.content}}</p>
+                  </div>
+                <Button class="todo-modify-btn" type="warning" size="small">编辑</Button>
                 <Button class="todo-del-btn" type="error" size="small">删除</Button>
               </li>
             </ul>
@@ -108,7 +113,7 @@ export default {
           return "不紧急 & 不重要";
           break;
       }
-    },
+    }
   },
   mounted: function() {
     window.addEventListener("resize", () => {
@@ -116,14 +121,21 @@ export default {
         (document.documentElement.clientHeight || document.body.clientHeight) -
         60;
     });
-    service.getTodoList({}).then(res => {
-      console.log(res);
-      let listArr = res.data.userTodoList.list;
-      this.initList(listArr);
-    });
+    this.getData();
   },
   methods: {
+    getData: function() {
+      service.getTodoList({}).then(res => {
+        console.log(res);
+        let listArr = res.data.userTodoList.list;
+        this.initList(listArr);
+      });
+    },
     initList: function(listArr) {
+      this.typeOneList = [];
+      this.typeTwoList = [];
+      this.typeThreeList = [];
+      this.typeFourList = [];
       for (let i = 0; i < listArr.length; i++) {
         switch (listArr[i].type) {
           case 1:
@@ -140,6 +152,15 @@ export default {
             break;
         }
       }
+    },
+    quitSystem: function() {
+      this.$Modal.confirm({
+        title: "退出",
+        content: "确认退出Todolist系统吗？",
+        onOk: () => {
+          this.$router.push("/");
+        }
+      });
     },
     showAdd: function(value) {
       this.addType = value;
@@ -159,6 +180,7 @@ export default {
           console.log(res);
           if (res.data.success) {
             this.$Message.success(res.data.message);
+            this.getData();
             this.hideAdd();
           }
         });
@@ -188,6 +210,12 @@ ul,
 li {
   list-style: none;
 }
+.quit-btn {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translate(0, -50%);
+}
 .main-header {
   width: 100%;
   height: 60px;
@@ -196,6 +224,7 @@ li {
   justify-content: center;
   align-items: center;
   color: #fff;
+  position: relative;
 }
 .todo-list-box {
   padding: 30px;
@@ -208,7 +237,6 @@ li {
   border: 1px solid #ccc;
 }
 .todo-list-item {
-  height: 40px;
   font-size: 16px;
   display: flex;
   justify-content: flex-start;
@@ -276,7 +304,19 @@ li {
   transform: translate(0, -50%);
 }
 
+.todo-modify-btn{
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translate(0,-50%);
+}
+
 .todo-input-title {
   font-weight: bold;
+}
+
+.todo-content{
+  color: #8a8a8a;
+  font-size: 14px;
 }
 </style>

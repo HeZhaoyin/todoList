@@ -10,7 +10,7 @@
             </i-input>
         </FormItem>
         <FormItem prop="password">
-            <i-input type="password" v-model="loginData.password" placeholder="密码">
+            <i-input type="password" v-model="loginData.password" placeholder="密码" @keyup.enter.native="login">
                 <Icon type="ios-locked-outline" slot="prepend"></Icon>
             </i-input>
         </FormItem>
