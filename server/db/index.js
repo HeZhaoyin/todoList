@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-let db = mongoose.connect('mongodb://todoList:todoList@47.52.192.88:27017/todoList', {
+let db = mongoose.connect('mongodb://todoList:todoList@数据库地址/todoList', {
   useNewUrlParser: true
 })
 
